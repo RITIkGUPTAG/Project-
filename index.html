@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vehicle Manager</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, textarea { display: block; margin: 5px 0; }
+    .vehicle { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    img { max-width: 200px; display: block; }
+  </style>
+</head>
+<body>
+
+  <h1>Vehicle Manager</h1>
+
+  <form id="vehicleForm">
+    <input type="text" id="vehicalName" placeholder="Vehicle Name" required>
+    <input type="text" id="brand" placeholder="Brand" required>
+    <input type="number" id="price" placeholder="Price" required>
+    <input type="text" id="image" placeholder="Image URL" required>
+    <textarea id="desc" placeholder="Description" required></textarea>
+    <button type="submit">Add Vehicle</button>
+  </form>
+
+  <h2>Vehicles</h2>
+  <div id="vehicleList"></div>
+
+  <script>
+    const form = document.getElementById('vehicleForm');
+    const list = document.getElementById('vehicleList');
+    const apiUrl = 'http://localhost:3000/api/vehicles';
+
+    async function fetchVehicles() {
+      const res = await fetch(apiUrl);
+      const data = await res.json();
+      list.innerHTML = '';
+      data.forEach(vehicle => {
+        const div = document.createElement('div');
+        div.className = 'vehicle';
+        div.innerHTML = `
+          <strong>${vehicle.vehicalName}</strong> (${vehicle.brand}) - $${vehicle.price}<br>
+          <img src="${vehicle.image}" alt="${vehicle.vehicalName}">
+          <p>${vehicle.desc}</p>
+          <button onclick="deleteVehicle(${vehicle.id})">Delete</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const newVehicle = {
+        vehicalName: form.vehicalName.value,
+        brand: form.brand.value,
+        price: parseFloat(form.price.value),
+        image: form.image.value,
+        desc: form.desc.value
+      };
+      await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newVehicle)
+      });
+      form.reset();
+      fetchVehicles();
+    };
+
+    async function deleteVehicle(id) {
+      await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+      fetchVehicles();
+    }
+
+    fetchVehicles();
+  </script>
+</body>
+</html>
